@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IV Day</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>💉</text></svg>">
+<style>
+  :root {
+    --bg: #f4f6f8; --card: #ffffff; --ink: #1d2733; --muted: #66758a;
+    --accent: #0b6e6e; --accent-soft: #e0f0f0; --line: #e3e8ee;
+    --green: #1a7f4b; --green-soft: #e3f4ea; --amber: #9a6700; --amber-soft: #fff3d6;
+    --red: #b3382c; --red-soft: #fdebe9;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; }
+  .wrap { max-width: 560px; margin: 0 auto; padding: 16px; }
+  header { display:flex; align-items:center; justify-content:space-between; padding: 18px 2px 14px; }
+  header h1 { font-size: 1.35rem; letter-spacing: .2px; }
+  header h1 span { color: var(--accent); }
+  .sub { color: var(--muted); font-size: .82rem; margin-top: 2px; }
+  .whoami { text-align:right; font-size:.8rem; color: var(--muted); }
+  .whoami b { display:block; color: var(--ink); font-size:.9rem; }
+  .whoami button { background:none; border:none; color:var(--accent); font-size:.8rem; cursor:pointer; padding:2px 0; text-decoration:underline; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 10px; box-shadow: 0 1px 2px rgba(16,30,54,.04); }
+  /* login */
+  #login { max-width: 360px; margin: 10vh auto 0; }
+  #login h1 { font-size: 1.5rem; text-align:center; margin-bottom: 4px; }
+  #login p { text-align:center; color: var(--muted); font-size:.85rem; margin-bottom: 18px; }
+  #login label { font-size:.8rem; color:var(--muted); display:block; margin: 10px 0 4px; }
+  #login input { width:100%; padding: 11px 12px; border:1px solid var(--line); border-radius: 9px; font-size:1rem; }
+  #login button { width:100%; margin-top:16px; padding: 12px; border:none; border-radius: 9px; background: var(--accent); color:#fff; font-size:1rem; font-weight:600; cursor:pointer; }
+  #login .err { color: var(--red); font-size:.85rem; margin-top:10px; text-align:center; min-height:1.2em; }
+  /* session rows */
+  .sess { display:flex; align-items:center; gap: 12px; }
+  .when { flex: 1; }
+  .when .date { font-weight: 650; font-size: 1.02rem; }
+  .when .hrs { color: var(--muted); font-size: .82rem; margin-top: 2px; }
+  .badge { font-size:.68rem; font-weight:700; letter-spacing:.4px; padding: 3px 8px; border-radius: 99px; white-space:nowrap; }
+  .b-half { background: var(--accent-soft); color: var(--accent); }
+  .b-follow { background: var(--amber-soft); color: var(--amber); }
+  .b-cover { background: var(--red-soft); color: var(--red); }
+  .claim { border: 1.5px solid var(--accent); background:#fff; color: var(--accent); font-weight: 600; padding: 9px 14px; border-radius: 9px; cursor: pointer; font-size:.88rem; min-width: 96px; }
+  .claim.mine { background: var(--green); border-color: var(--green); color: #fff; }
+  .claim:disabled { opacity:.55; cursor: default; }
+  .taken { font-size:.82rem; color: var(--muted); text-align:center; min-width: 96px; }
+  .taken b { display:block; color: var(--green); font-size:.88rem; }
+  .month-h { font-size:.78rem; font-weight:700; color:var(--muted); letter-spacing:.8px; text-transform:uppercase; margin: 18px 4px 8px; }
+  .note { color: var(--muted); font-size:.78rem; text-align:center; margin: 20px 0 30px; line-height:1.5; }
+  #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--ink); color:#fff; padding: 10px 18px; border-radius: 99px; font-size:.85rem; opacity:0; transition: opacity .25s; pointer-events:none; max-width: 90vw; }
+  #toast.show { opacity: 1; }
+  .hidden { display:none !important; }
+</style>
+</head>
+<body>
+
+<div class="wrap hidden" id="app">
+  <header>
+    <div>
+      <h1>IV <span>Day</span></h1>
+      <div class="sub">Sedation lists · Medindie Dental · Dr de Jonge</div>
+    </div>
+    <div class="whoami"><b id="who"></b><button id="logout">Sign out</button></div>
+  </header>
+  <div id="list"></div>
+  <p class="note">Tap <b>Claim</b> to put yourself on a list, or tap your green tick again to release it if you become unavailable.<br>Lists run 08:00–17:30 unless marked half day.</p>
+</div>
+
+<div class="wrap" id="login">
+  <div class="card">
+    <h1>IV <span style="color:var(--accent)">Day</span></h1>
+    <p>Anaesthetic nurse roster — Medindie Dental</p>
+    <label>Email</label>
+    <input type="email" id="email" autocomplete="username" inputmode="email">
+    <label>Password</label>
+    <input type="password" id="password" autocomplete="current-password">
+    <button id="signin">Sign in</button>
+    <div class="err" id="loginerr"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const sb = supabase.createClient(
+  'https://kurgccxdccjbkaxugepw.supabase.co',
+  'sb_publishable_8qUHVSNBWLHl9wwIPD70Sw_6I2ZoUnD'
+);
+
+const $ = id => document.getElementById(id);
+let me = null;
+
+function myName(user) {
+  return user.user_metadata?.name || user.email.split('@')[0];
+}
+function toast(msg) {
+  $('toast').textContent = msg;
+  $('toast').classList.add('show');
+  setTimeout(() => $('toast').classList.remove('show'), 2600);
+}
+function fmtDate(d) {
+  return new Date(d + 'T00:00:00').toLocaleDateString('en-AU', { weekday:'short', day:'numeric', month:'short' });
+}
+function monthOf(d) {
+  return new Date(d + 'T00:00:00').toLocaleDateString('en-AU', { month:'long', year:'numeric' });
+}
+
+async function refresh() {
+  const today = new Date().toISOString().slice(0,10);
+  const { data, error } = await sb.from('sedation_session')
+    .select('*').gte('session_date', today).order('session_date');
+  if (error) { toast('Could not load lists: ' + error.message); return; }
+  render(data || []);
+}
+
+function render(rows) {
+  const list = $('list');
+  list.innerHTML = '';
+  if (!rows.length) { list.innerHTML = '<div class="card">No upcoming lists.</div>'; return; }
+  let lastMonth = '';
+  for (const r of rows) {
+    const m = monthOf(r.session_date);
+    if (m !== lastMonth) {
+      lastMonth = m;
+      const h = document.createElement('div');
+      h.className = 'month-h'; h.textContent = m;
+      list.appendChild(h);
+    }
+    const half = r.end_time <= '13:00';
+    const card = document.createElement('div');
+    card.className = 'card sess';
+
+    let badges = '';
+    if (half) badges += '<span class="badge b-half">HALF DAY</span> ';
+    if (r.status === 'FOLLOW UP') badges += '<span class="badge b-follow">FOLLOW UP</span> ';
+    if (r.status === 'COVER REQUIRED') badges += '<span class="badge b-cover">COVER REQ’D</span> ';
+
+    let action = '';
+    if (!r.claimed_by) {
+      action = `<button class="claim" data-id="${r.id}" data-act="claim">Claim</button>`;
+    } else if (r.claimed_by === me.id) {
+      action = `<button class="claim mine" data-id="${r.id}" data-act="unclaim">✓ Yours</button>`;
+    } else {
+      action = `<div class="taken"><b>${r.claimed_by_name || 'Taken'}</b>has this list</div>`;
+    }
+
+    card.innerHTML = `
+      <div class="when">
+        <div class="date">${fmtDate(r.session_date)} ${badges}</div>
+        <div class="hrs">${r.start_time}–${r.end_time}</div>
+      </div>${action}`;
+    list.appendChild(card);
+  }
+}
+
+$('list').addEventListener('click', async e => {
+  const btn = e.target.closest('button.claim');
+  if (!btn) return;
+  btn.disabled = true;
+  const id = btn.dataset.id;
+  if (btn.dataset.act === 'claim') {
+    const { data, error } = await sb.from('sedation_session')
+      .update({ claimed_by: me.id, claimed_by_name: myName(me), claimed_at: new Date().toISOString() })
+      .eq('id', id).is('claimed_by', null).select();
+    if (error) toast('Claim failed: ' + error.message);
+    else if (!data.length) toast('Too late — that list was just claimed.');
+    else toast('List claimed. Thank you!');
+  } else {
+    const { error } = await sb.from('sedation_session')
+      .update({ claimed_by: null, claimed_by_name: null, claimed_at: null })
+      .eq('id', id).eq('claimed_by', me.id);
+    if (error) toast('Could not release: ' + error.message);
+    else toast('List released.');
+  }
+  await refresh();
+});
+
+$('signin').addEventListener('click', async () => {
+  $('loginerr').textContent = '';
+  const { error } = await sb.auth.signInWithPassword({
+    email: $('email').value.trim(), password: $('password').value
+  });
+  if (error) $('loginerr').textContent = error.message;
+});
+$('password').addEventListener('keydown', e => { if (e.key === 'Enter') $('signin').click(); });
+$('logout').addEventListener('click', () => sb.auth.signOut());
+
+sb.auth.onAuthStateChange((_evt, session) => {
+  me = session?.user || null;
+  $('app').classList.toggle('hidden', !me);
+  $('login').classList.toggle('hidden', !!me);
+  if (me) { $('who').textContent = myName(me); refresh(); }
+});
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && me) refresh();
+});
+</script>
+</body>
+</html>
