@@ -36,6 +36,8 @@
   .when { flex: 1; }
   .when .date { font-weight: 650; font-size: 1.02rem; }
   .when .hrs { color: var(--muted); font-size: .82rem; margin-top: 2px; }
+  .when .venue { color: var(--muted); font-size: .76rem; margin-top: 1px; }
+  .when .claimed-note { color: var(--green); font-size: .78rem; font-weight: 600; margin-top: 3px; }
   .badge { font-size:.68rem; font-weight:700; letter-spacing:.4px; padding: 3px 8px; border-radius: 99px; white-space:nowrap; }
   .b-half { background: var(--accent-soft); color: var(--accent); }
   .b-follow { background: var(--amber-soft); color: var(--amber); }
@@ -58,7 +60,7 @@
   <header>
     <div>
       <h1>IV <span>Day</span></h1>
-      <div class="sub">Sedation lists · Medindie Dental · Dr de Jonge</div>
+      <div class="sub">IV sedation lists · Dr de Jonge</div>
     </div>
     <div class="whoami"><b id="who"></b><button id="logout">Sign out</button></div>
   </header>
@@ -137,18 +139,23 @@ function render(rows) {
     if (r.status === 'COVER REQUIRED') badges += '<span class="badge b-cover">COVER REQ’D</span> ';
 
     let action = '';
+    let claimedNote = '';
     if (!r.claimed_by) {
       action = `<button class="claim" data-id="${r.id}" data-act="claim">Claim</button>`;
     } else if (r.claimed_by === me.id) {
       action = `<button class="claim mine" data-id="${r.id}" data-act="unclaim">✓ Yours</button>`;
+      claimedNote = `<div class="claimed-note">Claimed by ${r.claimed_by_name || 'you'} (you)</div>`;
     } else {
       action = `<div class="taken"><b>${r.claimed_by_name || 'Taken'}</b>has this list</div>`;
+      claimedNote = `<div class="claimed-note">Claimed by ${r.claimed_by_name || 'another nurse'}</div>`;
     }
 
     card.innerHTML = `
       <div class="when">
         <div class="date">${fmtDate(r.session_date)} ${badges}</div>
         <div class="hrs">${r.start_time}–${r.end_time}</div>
+        <div class="venue">${r.dentist || ''} · ${r.location || ''}</div>
+        ${claimedNote}
       </div>${action}`;
     list.appendChild(card);
   }
