@@ -42,6 +42,9 @@
   .b-half { background: var(--accent-soft); color: var(--accent); }
   .b-follow { background: var(--amber-soft); color: var(--amber); }
   .b-cover { background: var(--red-soft); color: var(--red); }
+  .b-cancel { background:#e5e7eb; color:#6b7280; }
+  .sess.cancelled { opacity:.62; }
+  .sess.cancelled .date { text-decoration: line-through; }
   .claim { border: 1.5px solid var(--accent); background:#fff; color: var(--accent); font-weight: 600; padding: 9px 14px; border-radius: 9px; cursor: pointer; font-size:.84rem; min-width: 90px; }
   .claim.mine, .claim.taken-btn { color: #fff; }
   .claim.taken-btn { cursor: default; }
@@ -138,18 +141,25 @@ function render(rows) {
       list.appendChild(h);
     }
     const half = r.end_time <= '13:00';
+    const cancelled = r.status === 'CANCELLED';
     const card = document.createElement('div');
-    card.className = 'card sess';
+    card.className = 'card sess' + (cancelled ? ' cancelled' : '');
 
     let badges = '';
     if (half) badges += '<span class="badge b-half">HALF DAY</span> ';
     if (r.status === 'FOLLOW UP') badges += '<span class="badge b-follow">FOLLOW UP</span> ';
     if (r.status === 'COVER REQUIRED') badges += '<span class="badge b-cover">COVER REQ’D</span> ';
 
+    if (cancelled) badges += '<span class="badge b-cancel">CANCELLED</span> ';
+
     let action = '';
     let claimedNote = '';
     const c = colorFor(r.claimed_by_name);
-    if (!r.claimed_by) {
+    if (cancelled) {
+      claimedNote = r.claimed_by_name
+        ? `<div class="claimed-note" style="color:var(--muted)">Was claimed by ${r.claimed_by_name} — now cancelled</div>`
+        : '';
+    } else if (!r.claimed_by) {
       action = `<button class="claim" data-id="${r.id}" data-act="claim">Claim</button>`;
     } else if (r.claimed_by === me.id) {
       action = `<button class="claim mine" data-id="${r.id}" data-act="unclaim" style="background:${c};border-color:${c}">Claimed by ${r.claimed_by_name || 'you'}</button>`;
