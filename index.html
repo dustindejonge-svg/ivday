@@ -53,6 +53,56 @@
   .note { color: var(--muted); font-size:.78rem; text-align:center; margin: 20px 0 30px; line-height:1.5; }
   #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--ink); color:#fff; padding: 10px 18px; border-radius: 99px; font-size:.85rem; opacity:0; transition: opacity .25s; pointer-events:none; max-width: 90vw; }
   #toast.show { opacity: 1; }
+
+  /* tabs */
+  .tabs { display:flex; gap:6px; background:#e9edf1; padding:4px; border-radius: 12px; margin: 0 0 12px; }
+  .tabs button { flex:1; border:none; background:transparent; padding: 9px 6px; border-radius: 9px; font-size:.88rem; font-weight:600; color: var(--muted); cursor:pointer; }
+  .tabs button.on { background:#fff; color: var(--ink); box-shadow: 0 1px 2px rgba(16,30,54,.08); }
+  /* drug count */
+  .card h2 { font-size:.95rem; margin-bottom: 8px; display:flex; justify-content:space-between; align-items:baseline; }
+  .card h2 small { font-size:.76rem; color: var(--muted); font-weight:500; }
+  .dtable { width:100%; border-collapse: collapse; font-size:.9rem; }
+  .dtable th { text-align:left; font-size:.7rem; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; padding: 4px 0; border-bottom:1px solid var(--line); font-weight:700; }
+  .dtable td { padding: 8px 0; border-bottom:1px solid var(--line); vertical-align: middle; }
+  .dtable tr:last-child td { border-bottom:none; }
+  .dtable td.num, .dtable th.num { text-align:right; white-space:nowrap; }
+  .dtable .pres { display:block; font-size:.72rem; color:var(--muted); }
+  .dtable input { width: 78px; padding: 8px 9px; border:1px solid var(--line); border-radius: 8px; font-size: 1.05rem; text-align:right; }
+  .dtable input:focus { outline:2px solid var(--accent-soft); border-color: var(--accent); }
+  .low { color: var(--red); font-weight:700; }
+  .ok  { color: var(--green); }
+  .pill { font-size:.66rem; font-weight:700; letter-spacing:.4px; padding: 2px 7px; border-radius: 99px; white-space:nowrap; }
+  .p-order { background: var(--red-soft); color: var(--red); }
+  .p-ok { background: var(--green-soft); color: var(--green); }
+  .row { display:flex; gap:8px; align-items:center; margin-top: 12px; flex-wrap:wrap; }
+  .row label { font-size:.78rem; color: var(--muted); }
+  .row input[type=date] { padding: 8px 9px; border:1px solid var(--line); border-radius: 8px; font-size:.9rem; }
+  .row input[type=text] { flex:1; min-width: 160px; padding: 8px 10px; border:1px solid var(--line); border-radius: 8px; font-size:.9rem; }
+  .btn { border:none; background: var(--accent); color:#fff; font-weight:600; padding: 11px 16px; border-radius: 9px; cursor:pointer; font-size:.9rem; }
+  .btn.ghost { background:#fff; color: var(--accent); border:1.5px solid var(--accent); }
+  .btn:disabled { opacity:.55; cursor:default; }
+  .hist { font-size:.84rem; }
+  .hist .h-row { padding: 9px 0; border-bottom: 1px solid var(--line); }
+  .hist .h-row:last-child { border-bottom:none; }
+  .hist .h-top { display:flex; justify-content:space-between; }
+  .hist .h-top b { font-weight:650; }
+  .hist .h-top span { color: var(--muted); }
+  .hist .h-vals { color: var(--muted); font-size:.78rem; margin-top:3px; line-height:1.5; }
+  .hist .h-vals i { font-style:normal; color: var(--ink); }
+  .hist .h-note { font-size:.78rem; margin-top:2px; }
+  .empty { color: var(--muted); font-size:.85rem; }
+  details summary { cursor:pointer; font-size:.95rem; font-weight:600; list-style:none; display:flex; justify-content:space-between; }
+  details summary::-webkit-details-marker { display:none; }
+  details summary::after { content:'▸'; color: var(--muted); }
+  details[open] summary::after { content:'▾'; }
+  details .dtable { margin-top: 10px; }
+  .form-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 6px; }
+  .form-grid .full { grid-column: 1 / -1; }
+  .form-grid label { display:block; font-size:.74rem; color: var(--muted); margin-bottom: 3px; }
+  .form-grid input, .form-grid select { width:100%; padding: 9px 10px; border:1px solid var(--line); border-radius: 8px; font-size: .95rem; background:#fff; color: var(--ink); }
+  .when .anaes { color: var(--ink); font-size: .78rem; margin-top: 1px; font-weight: 600; }
+  .del { background:none; border:none; color: var(--red); font-size:.76rem; text-decoration: underline; cursor:pointer; padding: 4px 0 0; }
+  .linkbtn { background:none !important; border:none; color: var(--accent) !important; font-size:.82rem !important; text-decoration: underline; cursor:pointer; margin-top: 10px !important; font-weight:500 !important; padding:4px !important; }
   .hidden { display:none !important; }
 </style>
 </head>
@@ -62,24 +112,116 @@
   <header>
     <div>
       <h1>IV <span>Day</span></h1>
-      <div class="sub">IV sedation lists · Dr de Jonge</div>
+      <div class="sub">IV sedation lists</div>
     </div>
     <div class="whoami"><b id="who"></b><button id="logout">Sign out</button></div>
   </header>
-  <div id="list"></div>
-  <p class="note">Tap <b>Claim</b> to put yourself on a list, or tap your own coloured "Claimed by" button again to release it if you become unavailable.</p>
+  <div class="tabs" role="tablist">
+    <button id="tab-lists" class="on" data-tab="lists">Lists</button>
+    <button id="tab-drugs" data-tab="drugs">Drug count</button>
+  </div>
+
+  <div id="panel-lists">
+    <div class="card hidden" id="add-card">
+      <details id="add-details">
+        <summary>Add a list</summary>
+        <div class="form-grid">
+          <div class="full"><label>Date</label><input type="date" id="add-date"></div>
+          <div class="full"><label>Session</label>
+            <select id="add-session">
+              <option value="08:00|17:30">Full day (08:00–17:30)</option>
+              <option value="08:00|12:30">Morning (08:00–12:30)</option>
+              <option value="13:00|17:30">Afternoon (13:00–17:30)</option>
+              <option value="custom">Custom times…</option>
+            </select></div>
+          <div class="add-custom hidden"><label>Start</label><input type="time" id="add-start" value="08:00"></div>
+          <div class="add-custom hidden"><label>Finish</label><input type="time" id="add-end" value="17:30"></div>
+          <div class="full"><label>Location</label>
+            <select id="add-loc">
+              <option value="">Select…</option>
+              <option>Medindie Dental</option>
+              <option>Balaclava</option>
+              <option>Kapunda</option>
+              <option value="other">Other…</option>
+            </select></div>
+          <div class="full hidden" id="add-loc-other-wrap"><label>Other location</label><input type="text" id="add-loc-other" maxlength="80"></div>
+          <div class="full"><label>Dentist</label>
+            <select id="add-doc">
+              <option value="">Select…</option>
+              <option>Dr Samy Kafagy</option>
+              <option>Dr Taz Elgammal</option>
+              <option value="other">Other…</option>
+            </select></div>
+          <div class="full hidden" id="add-doc-other-wrap"><label>Other dentist</label><input type="text" id="add-doc-other" maxlength="80" placeholder="Dr …"></div>
+        </div>
+        <div class="row"><button class="btn" id="add-save">Add list</button></div>
+      </details>
+    </div>
+    <div id="list"></div>
+    <p class="note" id="lists-note"></p>
+  </div>
+
+  <div id="panel-drugs" class="hidden">
+    <div class="card" id="latest-card">
+      <h2>Stock on hand <small id="latest-meta"></small></h2>
+      <div id="latest"></div>
+      <div class="row" id="order-row" style="display:none">
+        <button class="btn ghost" id="copy-order">Copy order list</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>New count <small>ampoules / vials remaining</small></h2>
+      <table class="dtable" id="count-table"><tbody></tbody></table>
+      <div class="row">
+        <label>Date</label><input type="date" id="count-date">
+        <input type="text" id="count-note" placeholder="Note (optional) — e.g. ordered 2 boxes propofol" maxlength="200">
+      </div>
+      <div class="row">
+        <button class="btn" id="save-count">Save count</button>
+        <span class="empty" id="count-hint">Leave a drug blank if you didn't count it.</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <details id="par-details">
+        <summary>Par levels <small style="font-weight:500;color:var(--muted)">order when on hand ≤ par</small></summary>
+        <table class="dtable" id="par-table"><tbody></tbody></table>
+        <div class="row"><button class="btn ghost" id="save-par">Save par levels</button></div>
+      </details>
+    </div>
+
+    <div class="card">
+      <h2>History <small>last 20 counts</small></h2>
+      <div class="hist" id="history"></div>
+    </div>
+
+    <p class="note">Count at the end of each IV day. Drugs at or below par are flagged for ordering. This is an ordering aid only — it is not the S8 register.</p>
+  </div>
 </div>
 
 <div class="wrap" id="login">
   <div class="card">
     <h1>IV <span style="color:var(--accent)">Day</span></h1>
-    <p>Anaesthetic nurse roster — Dr de Jonge's sedation lists</p>
+    <p>IV sedation list roster</p>
     <label>Email</label>
     <input type="email" id="email" autocomplete="username" inputmode="email">
     <label>Password</label>
     <input type="password" id="password" autocomplete="current-password">
     <button id="signin">Sign in</button>
+    <button id="forgot" class="linkbtn" style="width:100%">Forgot password / first time? Email me a link</button>
     <div class="err" id="loginerr"></div>
+  </div>
+</div>
+
+<div class="wrap hidden" id="setpw">
+  <div class="card" style="max-width:360px;margin:10vh auto 0">
+    <h1 style="font-size:1.4rem;text-align:center;margin-bottom:4px">Set your password</h1>
+    <p style="text-align:center;color:var(--muted);font-size:.85rem;margin-bottom:14px" id="setpw-who"></p>
+    <input type="password" id="newpw" placeholder="New password (8+ characters)" autocomplete="new-password" style="width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:9px;font-size:1rem">
+    <input type="password" id="newpw2" placeholder="Repeat password" autocomplete="new-password" style="width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:9px;font-size:1rem;margin-top:8px">
+    <button class="btn" id="setpw-btn" style="width:100%;margin-top:14px">Save password</button>
+    <div style="color:var(--red);font-size:.85rem;margin-top:10px;text-align:center" id="setpw-err"></div>
   </div>
 </div>
 
@@ -87,6 +229,11 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+// Invite / password-reset links land here with #...&type=invite|recovery. Capture before supabase-js consumes the hash.
+const LINK_TYPE = new URLSearchParams(location.hash.slice(1)).get('type');
+let needPassword = LINK_TYPE === 'invite' || LINK_TYPE === 'recovery';
+const APP_URL = 'https://dustindejonge-svg.github.io/ivday/';
+
 const sb = supabase.createClient(
   'https://kurgccxdccjbkaxugepw.supabase.co',
   'sb_publishable_8qUHVSNBWLHl9wwIPD70Sw_6I2ZoUnD'
@@ -95,6 +242,13 @@ const sb = supabase.createClient(
 const $ = id => document.getElementById(id);
 let me = null;
 
+// Role comes from app_metadata (admin-set, not editable by the user themselves).
+// 'dental' = practice staff: can view the roster and edit drug counts, cannot claim/release lists.
+function roleOf(user) { return user?.app_metadata?.role || 'nurse'; }
+function isDental() { return roleOf(me) === 'dental'; }
+// 'anaesthetist' = another anaesthetist (e.g. Dr Konidaris): can add and delete their own lists, cannot claim.
+function isAnaes() { return roleOf(me) === 'anaesthetist'; }
+function canClaim() { return !isDental() && !isAnaes(); }
 function myName(user) {
   return user.user_metadata?.name || user.email.split('@')[0];
 }
@@ -103,7 +257,7 @@ function toast(msg) {
   $('toast').classList.add('show');
   setTimeout(() => $('toast').classList.remove('show'), 2600);
 }
-const PALETTE = { tina: '#7c3aed', richelle: '#d9489b', dustin: '#0b6e6e' };
+const PALETTE = { tina: '#7c3aed', richelle: '#d9489b', dustin: '#0b6e6e', 'medindie dental': '#b45309', reception: '#b45309' };
 function colorFor(name) {
   if (!name) return '#66758a';
   const k = name.trim().toLowerCase();
@@ -159,6 +313,11 @@ function render(rows) {
       claimedNote = r.claimed_by_name
         ? `<div class="claimed-note" style="color:var(--muted)">Was claimed by ${r.claimed_by_name} — now cancelled</div>`
         : '';
+    } else if (!canClaim()) {
+      // read-only roster view for practice staff and other anaesthetists
+      action = r.claimed_by
+        ? `<button class="claim taken-btn" disabled style="background:${c};border-color:${c}">${r.claimed_by_name || '?'}</button>`
+        : `<button class="claim taken-btn" disabled style="background:#e5e7eb;border-color:#e5e7eb;color:#6b7280">Unclaimed</button>`;
     } else if (!r.claimed_by) {
       action = `<button class="claim" data-id="${r.id}" data-act="claim">Claim</button>`;
     } else if (r.claimed_by === me.id) {
@@ -168,20 +327,36 @@ function render(rows) {
       action = `<button class="claim taken-btn" disabled style="background:${c};border-color:${c}">Claimed by ${r.claimed_by_name || '?'}</button>`;
     }
 
+    const anaes = r.source === 'manual' ? (r.anaesthetist || r.created_by_name || '') : 'Dr de Jonge';
+    const del = (isAnaes() && r.source === 'manual' && r.created_by === me.id)
+      ? `<button class="del" data-id="${esc(r.id)}" data-act="delete" data-claimed="${esc(r.claimed_by_name || '')}">Delete this list</button>` : '';
     card.innerHTML = `
       <div class="when">
         <div class="date">${fmtDate(r.session_date)} ${badges}</div>
         <div class="hrs">${r.start_time}–${r.end_time}</div>
-        <div class="venue">${r.dentist || ''} · ${r.location || ''}</div>
+        <div class="anaes">Anaesthetist: ${esc(anaes)}</div>
+        <div class="venue">${esc(r.dentist || '')} · ${esc(r.location || '')}</div>
         ${claimedNote}
+        ${del}
       </div>${action}`;
     list.appendChild(card);
   }
 }
 
 $('list').addEventListener('click', async e => {
+  const dbtn = e.target.closest('button.del');
+  if (dbtn) {
+    const who = dbtn.dataset.claimed;
+    if (!confirm(who ? `${who} has claimed this list. Delete it anyway? Let them know.` : 'Delete this list?')) return;
+    const { data, error } = await sb.from('sedation_session').delete().eq('id', dbtn.dataset.id).select();
+    if (error) toast('Delete failed: ' + error.message);
+    else if (!data.length) toast('Could not delete (not your list?).');
+    else toast('List deleted.');
+    await refresh();
+    return;
+  }
   const btn = e.target.closest('button.claim');
-  if (!btn) return;
+  if (!btn || !btn.dataset.act || !canClaim()) return;
   btn.disabled = true;
   const id = btn.dataset.id;
   if (btn.dataset.act === 'claim') {
@@ -211,15 +386,265 @@ $('signin').addEventListener('click', async () => {
 $('password').addEventListener('keydown', e => { if (e.key === 'Enter') $('signin').click(); });
 $('logout').addEventListener('click', () => sb.auth.signOut());
 
-sb.auth.onAuthStateChange((_evt, session) => {
-  me = session?.user || null;
-  $('app').classList.toggle('hidden', !me);
+/* ---------------- add list (anaesthetist role) ---------------- */
+$('add-session').addEventListener('change', () => {
+  const c = $('add-session').value === 'custom';
+  document.querySelectorAll('.add-custom').forEach(el => el.classList.toggle('hidden', !c));
+});
+$('add-loc').addEventListener('change', () => $('add-loc-other-wrap').classList.toggle('hidden', $('add-loc').value !== 'other'));
+$('add-doc').addEventListener('change', () => $('add-doc-other-wrap').classList.toggle('hidden', $('add-doc').value !== 'other'));
+
+$('add-save').addEventListener('click', async () => {
+  const session_date = $('add-date').value;
+  if (!session_date) { toast('Pick a date.'); return; }
+  if (session_date < todayLocal()) { toast('That date is in the past.'); return; }
+  let start_time, end_time;
+  if ($('add-session').value === 'custom') { start_time = $('add-start').value; end_time = $('add-end').value; }
+  else [start_time, end_time] = $('add-session').value.split('|');
+  if (!start_time || !end_time || end_time <= start_time) { toast('Check the start and finish times.'); return; }
+  const location = $('add-loc').value === 'other' ? $('add-loc-other').value.trim() : $('add-loc').value;
+  const dentist = $('add-doc').value === 'other' ? $('add-doc-other').value.trim() : $('add-doc').value;
+  if (!location) { toast('Choose a location.'); return; }
+  if (!dentist) { toast('Choose a dentist.'); return; }
+  $('add-save').disabled = true;
+  const { error } = await sb.from('sedation_session').insert({
+    id: 'manual-' + crypto.randomUUID(), source: 'manual',
+    session_date, start_time, end_time, status: 'AWAITING LIST', location, dentist,
+    anaesthetist: myName(me), created_by: me.id, created_by_name: myName(me)
+  });
+  $('add-save').disabled = false;
+  if (error) { toast('Could not add: ' + error.message); return; }
+  toast('List added. The nurses can now claim it.');
+  $('add-date').value = ''; $('add-loc').value = ''; $('add-doc').value = '';
+  $('add-loc-other').value = ''; $('add-doc-other').value = '';
+  $('add-loc-other-wrap').classList.add('hidden'); $('add-doc-other-wrap').classList.add('hidden');
+  await refresh();
+});
+
+/* ---------------- password: forgot / first-time set ---------------- */
+$('forgot').addEventListener('click', async () => {
+  const email = $('email').value.trim();
+  if (!email) { $('loginerr').textContent = 'Type your email above first.'; return; }
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: APP_URL });
+  $('loginerr').textContent = error ? error.message : 'Check your email for a link to set your password.';
+});
+$('setpw-btn').addEventListener('click', async () => {
+  const a = $('newpw').value, b = $('newpw2').value;
+  $('setpw-err').textContent = '';
+  if (a.length < 8) { $('setpw-err').textContent = 'At least 8 characters.'; return; }
+  if (a !== b) { $('setpw-err').textContent = 'Passwords do not match.'; return; }
+  $('setpw-btn').disabled = true;
+  const { error } = await sb.auth.updateUser({ password: a });
+  $('setpw-btn').disabled = false;
+  if (error) { $('setpw-err').textContent = error.message; return; }
+  needPassword = false;
+  history.replaceState(null, '', location.pathname);
+  toast('Password saved.');
+  applySession(me);
+});
+
+/* ---------------- tabs ---------------- */
+let tab = 'lists';
+try { tab = localStorage.getItem('ivday.tab') || 'lists'; } catch (_) {}
+function showTab(t) {
+  tab = t;
+  try { localStorage.setItem('ivday.tab', t); } catch (_) {}
+  $('panel-lists').classList.toggle('hidden', t !== 'lists');
+  $('panel-drugs').classList.toggle('hidden', t !== 'drugs');
+  $('tab-lists').classList.toggle('on', t === 'lists');
+  $('tab-drugs').classList.toggle('on', t === 'drugs');
+  if (me) refreshAll();
+}
+$('tab-lists').addEventListener('click', () => showTab('lists'));
+$('tab-drugs').addEventListener('click', () => showTab('drugs'));
+
+/* ---------------- drug count ---------------- */
+let drugs = [];        // rows of drug_par, sorted
+let latest = null;     // most recent drug_count row
+let saving = false;
+
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fmtDateLong(d) {
+  return new Date(d + 'T00:00:00').toLocaleDateString('en-AU', { weekday:'short', day:'numeric', month:'short', year:'numeric' });
+}
+function todayLocal() {
+  const d = new Date(); const p = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+}
+function needsOrder(d, v) { return v !== null && v !== undefined && Number(v) <= Number(d.par); }
+
+async function refreshDrugs() {
+  const [{ data: par, error: e1 }, { data: hist, error: e2 }] = await Promise.all([
+    sb.from('drug_par').select('*').order('sort_order'),
+    sb.from('drug_count').select('*').order('counted_on', { ascending:false }).order('created_at', { ascending:false }).limit(20)
+  ]);
+  if (e1 || e2) {
+    const msg = (e1 || e2).message;
+    $('latest').innerHTML = `<div class="empty">Could not load drug data: ${esc(msg)}.<br>If this is the first time, the Supabase tables may not exist yet.</div>`;
+    return;
+  }
+  drugs = par || [];
+  latest = (hist && hist[0]) || null;
+  renderLatest();
+  renderCountForm();
+  renderPar();
+  renderHistory(hist || []);
+}
+
+function renderLatest() {
+  const box = $('latest');
+  if (!drugs.length) { box.innerHTML = '<div class="empty">No drugs configured.</div>'; $('latest-meta').textContent=''; $('order-row').style.display='none'; return; }
+  if (!latest) { box.innerHTML = '<div class="empty">No counts recorded yet. Enter the first count below.</div>'; $('latest-meta').textContent=''; $('order-row').style.display='none'; return; }
+  $('latest-meta').textContent = `${fmtDateLong(latest.counted_on)} · ${latest.counted_by_name || '?'}`;
+  let toOrder = 0;
+  let html = '<table class="dtable"><thead><tr><th>Drug</th><th class="num">On hand</th><th class="num">Par</th><th></th></tr></thead><tbody>';
+  for (const d of drugs) {
+    const v = latest.counts?.[d.id];
+    const has = v !== null && v !== undefined;
+    const low = has && needsOrder(d, v);
+    if (low) toOrder++;
+    html += `<tr>
+      <td>${esc(d.name)}<span class="pres">${esc(d.presentation || '')}</span></td>
+      <td class="num ${low ? 'low' : (has ? 'ok' : '')}">${has ? esc(v) : '—'}</td>
+      <td class="num" style="color:var(--muted)">${esc(d.par)}</td>
+      <td class="num">${has ? (low ? '<span class="pill p-order">ORDER</span>' : '<span class="pill p-ok">OK</span>') : '<span class="pill" style="background:#e5e7eb;color:#6b7280">NOT COUNTED</span>'}</td>
+    </tr>`;
+  }
+  html += '</tbody></table>';
+  box.innerHTML = html;
+  $('order-row').style.display = toOrder ? '' : 'none';
+}
+
+function renderCountForm() {
+  const tb = $('count-table').querySelector('tbody');
+  tb.innerHTML = '';
+  for (const d of drugs) {
+    const last = latest?.counts?.[d.id];
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${esc(d.name)}<span class="pres">${esc(d.presentation || '')}</span></td>
+      <td class="num"><input type="number" inputmode="numeric" min="0" step="1" data-drug="${esc(d.id)}" placeholder="${last ?? ''}"></td>`;
+    tb.appendChild(tr);
+  }
+  if (!$('count-date').value) $('count-date').value = todayLocal();
+}
+
+function renderPar() {
+  const tb = $('par-table').querySelector('tbody');
+  tb.innerHTML = '<tr><th>Drug</th><th>Presentation</th><th class="num">Par</th></tr>';
+  for (const d of drugs) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${esc(d.name)}</td>
+      <td><input type="text" data-pres="${esc(d.id)}" value="${esc(d.presentation || '')}" style="width:100%;text-align:left;font-size:.85rem"></td>
+      <td class="num"><input type="number" inputmode="numeric" min="0" step="1" data-par="${esc(d.id)}" value="${esc(d.par)}"></td>`;
+    tb.appendChild(tr);
+  }
+}
+
+function renderHistory(rows) {
+  const box = $('history');
+  if (!rows.length) { box.innerHTML = '<div class="empty">No counts yet.</div>'; return; }
+  const byId = Object.fromEntries(drugs.map(d => [d.id, d]));
+  box.innerHTML = rows.map(r => {
+    const vals = drugs
+      .filter(d => r.counts?.[d.id] !== undefined && r.counts?.[d.id] !== null)
+      .map(d => `${esc(d.name)} <i>${esc(r.counts[d.id])}</i>`)
+      .join(' · ');
+    return `<div class="h-row">
+      <div class="h-top"><b>${fmtDateLong(r.counted_on)}</b><span>${esc(r.counted_by_name || '?')}</span></div>
+      <div class="h-vals">${vals || '<span class="empty">no values</span>'}</div>
+      ${r.note ? `<div class="h-note">${esc(r.note)}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+$('save-count').addEventListener('click', async () => {
+  if (saving) return;
+  const counts = {};
+  let n = 0;
+  for (const inp of $('count-table').querySelectorAll('input[data-drug]')) {
+    const raw = inp.value.trim();
+    if (raw === '') continue;
+    const v = Number(raw);
+    if (!Number.isInteger(v) || v < 0) { toast(`Check the ${inp.dataset.drug} count — whole numbers only.`); inp.focus(); return; }
+    counts[inp.dataset.drug] = v; n++;
+  }
+  if (!n) { toast('Enter at least one count.'); return; }
+  const counted_on = $('count-date').value || todayLocal();
+  saving = true; $('save-count').disabled = true;
+  const { error } = await sb.from('drug_count').insert({
+    counted_on, counted_by: me.id, counted_by_name: myName(me),
+    counts, note: $('count-note').value.trim() || null
+  });
+  saving = false; $('save-count').disabled = false;
+  if (error) { toast('Save failed: ' + error.message); return; }
+  toast(`Count saved (${n} drug${n === 1 ? '' : 's'}). Thank you!`);
+  for (const inp of $('count-table').querySelectorAll('input[data-drug]')) inp.value = '';
+  $('count-note').value = '';
+  await refreshDrugs();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+$('save-par').addEventListener('click', async () => {
+  const updates = [];
+  for (const d of drugs) {
+    const par = Number($('par-table').querySelector(`input[data-par="${d.id}"]`).value);
+    const pres = $('par-table').querySelector(`input[data-pres="${d.id}"]`).value.trim();
+    if (!Number.isInteger(par) || par < 0) { toast(`Par for ${d.name} must be a whole number.`); return; }
+    if (par !== d.par || pres !== (d.presentation || '')) {
+      updates.push(sb.from('drug_par').update({ par, presentation: pres || null, updated_at: new Date().toISOString(), updated_by_name: myName(me) }).eq('id', d.id));
+    }
+  }
+  if (!updates.length) { toast('No changes.'); return; }
+  $('save-par').disabled = true;
+  const results = await Promise.all(updates);
+  $('save-par').disabled = false;
+  const err = results.find(r => r.error);
+  if (err) { toast('Could not save: ' + err.error.message); return; }
+  toast('Par levels saved.');
+  $('par-details').open = false;
+  await refreshDrugs();
+});
+
+$('copy-order').addEventListener('click', async () => {
+  if (!latest) return;
+  const lines = drugs
+    .filter(d => needsOrder(d, latest.counts?.[d.id]))
+    .map(d => `• ${d.name} (${d.presentation || 'amp'}): ${latest.counts[d.id]} on hand, par ${d.par}`);
+  const text = `IV Day drug order — counted ${fmtDateLong(latest.counted_on)} by ${latest.counted_by_name || '?'}\n` + lines.join('\n');
+  try { await navigator.clipboard.writeText(text); toast('Order list copied.'); }
+  catch (_) { prompt('Copy this order list:', text); }
+});
+
+/* ---------------- boot ---------------- */
+function refreshAll() {
+  if (tab === 'drugs') refreshDrugs(); else refresh();
+}
+
+function applySession(user) {
+  me = user || null;
+  const pw = !!me && needPassword;
+  $('setpw').classList.toggle('hidden', !pw);
+  $('app').classList.toggle('hidden', !me || pw);
   $('login').classList.toggle('hidden', !!me);
-  if (me) { $('who').textContent = myName(me); refresh(); }
+  if (pw) { $('setpw-who').textContent = me.email; return; }
+  if (me) {
+    $('who').textContent = myName(me) + (isDental() ? ' · practice' : '');
+    $('add-card').classList.toggle('hidden', !isAnaes());
+    $('lists-note').textContent = isDental()
+      ? 'Roster view: shows which nurse has taken each list. Practice staff can view lists and update the drug count but cannot claim lists.'
+      : isAnaes()
+      ? 'Add your lists above; the nurses can then claim them. You can delete a list you added.'
+      : 'Tap Claim to put yourself on a list, or tap your own coloured "Claimed by" button again to release it if you become unavailable.';
+    showTab(tab);
+  }
+}
+sb.auth.onAuthStateChange((evt, session) => {
+  if (evt === 'PASSWORD_RECOVERY') needPassword = true;
+  applySession(session?.user);
 });
 
 document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && me) refresh();
+  if (!document.hidden && me) refreshAll();
 });
 </script>
 </body>
